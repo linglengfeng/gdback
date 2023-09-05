@@ -1,0 +1,27 @@
+{
+    "server_type": "dev",
+
+    "host": {
+        "ip": "127.0.0.1",
+        "port": 9101
+    },
+
+    "log": {
+        "level": "debug",
+        "path": "../logs",
+        "remain_day": 30
+    },
+
+    "mysql": {
+        "ip": "127.0.0.1",
+        "port": 3306,
+        "user": "root",
+        "password": "123456",
+        "db": "gdback"
+    },
+
+    "user": [
+        "test1"
+    ]
+    
+}
