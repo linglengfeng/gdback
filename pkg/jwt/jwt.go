@@ -8,6 +8,7 @@ import (
 )
 
 const jwtsecretKey = "CRpM4de2f0G6Vkvr"
+const expiredHour = 24
 
 // func generateJWT(secretKey string) (string, error) {
 func EncodeJwt(tokenInfo map[string]any) (string, error) {
@@ -43,7 +44,7 @@ func Test() {
 func generateJWT(info map[string]any, secretKey string) (string, error) {
 	claims := jwt.MapClaims{
 		"info": info,
-		"exp":  time.Now().Add(time.Hour * 24).Unix(), // 过期时间为当前时间加24小时
+		"exp":  time.Now().Add(time.Hour * expiredHour).Unix(), // 过期时间为当前时间加24小时
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -60,7 +61,7 @@ func generateJWT(info map[string]any, secretKey string) (string, error) {
 func generateJWTtest(secretKey string) (string, error) {
 	claims := jwt.MapClaims{
 		"username": "your_username",
-		"exp":      time.Now().Add(time.Hour * 24).Unix(), // 过期时间为当前时间加24小时
+		"exp":      time.Now().Add(time.Hour * expiredHour).Unix(), // 过期时间为当前时间加24小时
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -77,26 +78,26 @@ func generateJWTtest(secretKey string) (string, error) {
 // 解析 JWT
 func parseJWT(tokenString, secretKey string) (jwt.MapClaims, error) {
 	// 解析 JWT
-	fmt.Println(" parseJWT 111111", tokenString, secretKey)
+	// fmt.Println(" parseJWT 111111", tokenString, secretKey)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// 验证签名方法
-		fmt.Println(" parseJWT 111111", 222)
+		// fmt.Println(" parseJWT 111111", 222)
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("无效的签名方法：%v", token.Header["alg"])
 		}
-		fmt.Println(" parseJWT 111111", 3333, secretKey)
+		// fmt.Println(" parseJWT 111111", 3333, secretKey)
 		// 返回密钥
 		return []byte(secretKey), nil
 	})
 	if err != nil {
-		fmt.Println(" parseJWT 111111", 3344, err)
+		// fmt.Println(" parseJWT 111111", 3344, err)
 		return nil, err
 	}
-	fmt.Println(" parseJWT 111111", 444)
+	// fmt.Println(" parseJWT 111111", 444)
 	// 验证 JWT
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return claims, nil
 	}
-	fmt.Println(" parseJWT 111111", 555)
+	// fmt.Println(" parseJWT 111111", 555)
 	return nil, fmt.Errorf("无效的 JWT")
 }

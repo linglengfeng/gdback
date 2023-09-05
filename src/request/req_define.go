@@ -2,7 +2,9 @@ package request
 
 import (
 	"gdback/config"
+	"gdback/pkg/jwt"
 	"gdback/pkg/logger"
+	"gdback/src/mysqldb"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -34,11 +36,14 @@ const (
 
 	UserLogin    = "/user/login"
 	UserRegister = "/user/register"
+
+	set_account = "account"
 )
 
 var (
 	// limit
-	LimitApi = map[string]byte{EncryptAesCbc: 1, DecryptAesCbc: 1, Encodejwt: 1, Decodejwt: 1, UserRegister: 1}
+	LimitApi           = map[string]byte{EncryptAesCbc: 1, DecryptAesCbc: 1, Encodejwt: 1, Decodejwt: 1, UserRegister: 1}
+	UnAuthorizationApi = map[string]byte{PING: 1, POST: 1, UserLogin: 1, UserRegister: 1, EncryptAesCbc: 1, DecryptAesCbc: 1, Encodejwt: 1, Decodejwt: 1}
 
 	MSG100 = gin.H{
 		"state":   S100,
@@ -57,16 +62,25 @@ var (
 )
 
 func request(req *gin.Engine) {
-	// 添加中间件函数来禁用某些路由
+	// // 添加中间件函数来禁用某些路由
+	// req.Use(func(c *gin.Context) {
+	// 	// 在中间件函数中判断是否禁用路由
+	// 	if shouldDisableRoute(c) {
+	// 		logger.Info("request bin used, req:%v", c.FullPath())
+	// 		// 如果需要禁用路由，中止请求处理
+	// 		c.AbortWithStatus(http.StatusForbidden)
+	// 		return
+	// 	}
+	// 	// 如果不需要禁用路由，继续处理请求
+	// 	c.Next()
+	// })
 	req.Use(func(c *gin.Context) {
-		// 在中间件函数中判断是否禁用路由
-		if shouldDisableRoute(c) {
-			logger.Info("request bin used, req:%v\n", c.FullPath())
-			// 如果需要禁用路由，中止请求处理
+		is, err := shouldDisableRoute(c)
+		if !is {
+			logger.Info("request can't used, err:%v", err)
+			c.JSON(http.StatusOK, retMsg(MSG102, err))
 			c.AbortWithStatus(http.StatusForbidden)
-			return
 		}
-		// 如果不需要禁用路由，继续处理请求
 		c.Next()
 	})
 
@@ -84,14 +98,48 @@ func request(req *gin.Engine) {
 	req.POST(Decodejwt, posthandle_decodejwt)
 }
 
-func shouldDisableRoute(c *gin.Context) bool {
-	serverType := config.Config.GetString("server_type")
-	// logger.Debug("request shouldDisableRoute, req:%v, serverType:%v", c.FullPath(), serverType)
-	if serverType == "dev" {
-		return false
-	} else {
-		fullpath := c.FullPath()
-		// logger.Debug("request shouldDisableRoute, 2222:%v", LimitApi[fullpath])
-		return LimitApi[fullpath] == 1
+func shouldDisableRoute(c *gin.Context) (bool, string) {
+	fullpath := c.FullPath()
+	checkLimitApi, errapi := checkLimitApi(fullpath)
+	if !checkLimitApi {
+		return checkLimitApi, errapi
 	}
+
+	token := c.GetHeader("Authorization")
+	checkAuth, errauth, account := checkAuth(fullpath, token)
+	if !checkAuth {
+		return checkAuth, errauth
+	}
+	c.Set(set_account, account)
+	return true, ""
+}
+
+func checkLimitApi(fullpath string) (bool, string) {
+	serverType := config.Config.GetString("server_type")
+	if serverType == "dev" {
+		return true, "isLimitApi"
+	} else {
+		return LimitApi[fullpath] != 1, "isLimitApi"
+	}
+}
+
+func checkAuth(fullpath, token string) (bool, string, string) {
+	retmsg := ""
+	account := ""
+	if UnAuthorizationApi[fullpath] == 1 {
+		return true, retmsg, account
+	}
+	mapinfo, err := jwt.DecodeJwt(token)
+	if err != nil {
+		return false, err.Error(), ""
+	}
+	info := mapinfo["info"].(map[string]any)
+	if info["account"] == nil {
+		return false, "Authorization error", account
+	}
+	account = info["account"].(string)
+	if !mysqldb.UserIsExist(account) {
+		return false, "account not exist", account
+	}
+	return true, retmsg, account
 }

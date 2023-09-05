@@ -3,11 +3,12 @@ USE gdback;
 
 CREATE TABLE IF NOT EXISTS `user` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL DEFAULT '' COMMENT '名字',
-  `create_ts` bigint NOT NULL DEFAULT 0 COMMENT '创建时间戳',
+  `account` varchar(128) NOT NULL DEFAULT '' COMMENT '账户',
+  `password` varchar(128) NOT NULL DEFAULT '' COMMENT '密码',
+  `createtime` timestamp NULL default CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `IDX_id` (`id`),
-  KEY `IDX_name` (`name`)
+  KEY `IDX_account` (`account`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 

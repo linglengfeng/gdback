@@ -1,9 +1,9 @@
 package mysqldb
 
 import (
-	"encoding/json"
 	"fmt"
 	"gdback/config"
+	"gdback/pkg/logger"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -11,6 +11,9 @@ import (
 )
 
 var DB *gorm.DB
+
+const Successed = "r1"
+const Failed = "r2"
 
 type Register struct {
 	Id            uint64
@@ -24,7 +27,7 @@ type Register struct {
 	Channel_id    string
 	Register_at   uint64
 	Register_type int
-} // insert into register values(2,2,"remote","ip","imei","os","model","app_id","channel_id",1,1);
+}
 
 func Start() {
 	// 设置数据库连接参数
@@ -47,11 +50,43 @@ func Start() {
 	DB = db
 }
 
-func RegisterInfo() ([]byte, error) {
-	var results []Register
+// func RegisterInfo() ([]byte, error) {
+// 	var results []Register
+// 	query := "select * from register"
+// 	DB.Raw(query).Scan(&results)
+// 	return json.Marshal(results)
+// }
+
+func RegisterInfo() [](map[string]any) {
+	// var results []Register
+	var results [](map[string]any)
 	query := "select * from register"
 	DB.Raw(query).Scan(&results)
-	return json.Marshal(results)
+	return results
+}
+
+func UserInsert(account, password string) bool {
+	results := Successed
+	query := "call sp_user_insert(?, ?)"
+	tx := DB.Raw(query, account, password).Scan(&results)
+	logger.Debug("UserInsert, account:%v, password:%v, result:%v, tx:%v", account, password, results, tx)
+	return results == Successed
+}
+
+func UserLogin(account, password string) bool {
+	results := Successed
+	query := "call sp_user_login(?, ?)"
+	tx := DB.Raw(query, account, password).Scan(&results)
+	logger.Debug("UserLogin, account:%v, password:%v, result:%v, tx:%v", account, password, results, tx)
+	return results == Successed
+}
+
+func UserIsExist(account string) bool {
+	results := 0
+	query := "select count(*) from user where account = ?"
+	tx := DB.Raw(query, account).Scan(&results)
+	logger.Debug("UserIsExist, account:%v, result:%v, tx:%v", account, results, tx)
+	return results == 1
 }
 
 func Test() {

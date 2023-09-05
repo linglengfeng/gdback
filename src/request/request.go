@@ -6,7 +6,6 @@ import (
 	"gdback/config"
 	"gdback/pkg/crypto"
 	"gdback/pkg/jwt"
-	"gdback/src/mysqldb"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -35,16 +34,6 @@ func gethandle_ping(c *gin.Context) {
 	c.JSON(http.StatusOK, retMsg(MSG100, "pong"))
 }
 
-func gethandle_gamedata_register(c *gin.Context) {
-	info, err := mysqldb.RegisterInfo()
-	ret := MSG100
-	if err != nil {
-		ret = retMsg(MSG100, err.Error())
-	}
-	ret[MESSAGE] = string(info)
-	c.JSON(http.StatusOK, ret)
-}
-
 // post
 func posthandle_post(c *gin.Context) {
 	id := c.PostForm("id")
@@ -54,9 +43,6 @@ func posthandle_post(c *gin.Context) {
 		c.JSON(http.StatusOK, MSG102)
 		return
 	}
-	// retmap := make(map[string]any)
-	// retmap["id"] = id
-	// retmap["name"] = name
 	retdata := gin.H{
 		"id":   id,
 		"name": name,
