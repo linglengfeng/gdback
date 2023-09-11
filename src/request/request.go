@@ -1,7 +1,6 @@
 package request
 
 import (
-	"encoding/base64"
 	"fmt"
 	"gdback/config"
 	"gdback/pkg/crypto"
@@ -56,8 +55,7 @@ func posthandle_encryptoAesCbc(c *gin.Context) {
 		c.JSON(http.StatusOK, MSG102)
 		return
 	}
-	infobyte := []byte(info)
-	infostr, err := crypto.EncryptoAesCbc(infobyte)
+	infostr, err := crypto.EncryptoAesCbc(info)
 	if err != nil {
 		c.JSON(http.StatusOK, retMsg(MSG100, err.Error()))
 		return
@@ -75,15 +73,14 @@ func posthandle_decryptoAesCbc(c *gin.Context) {
 		c.JSON(http.StatusOK, MSG102)
 		return
 	}
-	infobyte, _ := base64.StdEncoding.DecodeString(info)
-	infostr, err := crypto.DecryptoAesCbc(infobyte)
+	infostr, err := crypto.DecryptoAesCbc(info)
 	if err != nil {
 		c.JSON(http.StatusOK, retMsg(MSG100, err.Error()))
 		return
 	}
 	// fmt.Println("解密后的数据 t1：", string(infostr))
 	retdata := gin.H{
-		"info": string(infostr),
+		"info": infostr,
 	}
 	c.JSON(http.StatusOK, retData(MSG100, retdata))
 }
