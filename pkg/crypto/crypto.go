@@ -9,7 +9,8 @@ import (
 	"fmt"
 )
 
-var pub_key = []byte("g3ckbrsLG2ACFhxfEvw0BmXOujo7nDQd")
+var pub_key = []byte("sOc9jx2vPwIgF8prb7AqXQLelozmdDyY")
+var pub_iv = []byte("flTBXq9t5uI2C6ky")
 
 func EncryptoAesCbc(info ...[]byte) ([]byte, error) {
 	len := len(info)
@@ -86,7 +87,8 @@ func AesEncrypt(data []byte, key []byte) ([]byte, error) {
 	//初始化加密数据接收切片
 	crypted := make([]byte, len(encryptBytes))
 	//使用cbc加密模式
-	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize])
+	// blockMode := cipher.NewCBCEncrypter(block, key[:blockSize])
+	blockMode := cipher.NewCBCEncrypter(block, pub_iv)
 	//执行加密
 	blockMode.CryptBlocks(crypted, encryptBytes)
 	return crypted, nil
@@ -100,9 +102,10 @@ func AesDecrypt(data []byte, key []byte) ([]byte, error) {
 		return nil, err
 	}
 	//获取块的大小
-	blockSize := block.BlockSize()
+	// blockSize := block.BlockSize()
 	//使用cbc
-	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
+	// blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
+	blockMode := cipher.NewCBCDecrypter(block, pub_iv)
 	//初始化解密数据接收切片
 	crypted := make([]byte, len(data))
 	//执行解密
