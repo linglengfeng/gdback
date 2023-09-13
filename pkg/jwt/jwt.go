@@ -8,7 +8,7 @@ import (
 )
 
 const jwtsecretKey = "0wDiNrbYutlBRxmy"
-const expiredSec = 24 * 3600
+const expiredSec = 86400
 
 func EncodeJwt(tokenInfo map[string]any) (string, error) {
 	return GenerateJWT(tokenInfo, jwtsecretKey, expiredSec)
@@ -21,7 +21,7 @@ func DecodeJwt(token string) (jwt.MapClaims, error) {
 func GenerateJWT(info map[string]any, secretKey string, durationSec int) (string, error) {
 	claims := jwt.MapClaims{
 		"info": info,
-		"exp":  time.Now().Add(time.Duration(durationSec)).Unix(),
+		"exp":  time.Now().Add(time.Duration(durationSec) * time.Second).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
